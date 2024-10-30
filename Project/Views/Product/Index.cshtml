@@ -1,0 +1,64 @@
+﻿@model Project.Models.Product
+@using Project.Resources
+
+@{
+	ViewBag.Title = "Index";
+	Layout = "~/Views/Shared/_LayoutBasic.cshtml";
+}
+
+
+<div class="container mt-5">
+	<h1 class="text-center">@Resource.Product</h1>
+	@Html.Label(Resource.Category, new { @class = "form-label" })
+	@Html.DropDownListFor(c => c.CategoryId, ViewData["CategoryId"] as SelectList, new { @class = "form-control", @id = "selectcatogray" })
+	<div class="mt-5" id="result"></div>
+
+	
+
+
+</div>
+
+
+@**@
+@* to load jquery *@
+@section vaild{
+
+	@Scripts.Render("~/script")
+
+
+}
+@section js{
+	<script>
+		$(document).ready(function () {
+			
+			function loadProducts(categoryId) {
+				$.ajax({
+					url: "/Product/getproducts",
+					type: "GET",
+					data: { id: categoryId },
+					success: function (data) {
+						$('#result').html(data);
+					},
+					error: function (errormessage) {
+						alert(errormessage.responseText);
+					}
+				});
+			}
+
+			
+			var defaultCategoryId = $('#selectcatogray').val(); 
+			loadProducts(defaultCategoryId);
+
+			
+			$('#selectcatogray').change(function () {
+				var id = $(this).val();
+				loadProducts(id);
+			});
+		});
+
+
+
+
+
+	</script>
+}

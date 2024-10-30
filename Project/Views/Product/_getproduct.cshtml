@@ -1,0 +1,87 @@
+﻿
+@model List<Project.Models.Product>
+@using Project.Resources
+
+
+<div class="row">
+		@foreach (var item in Model)
+		{
+			<div class="col-md-4 col-sm-6 col-12 mb-4 parent_card">
+				<div class="card h-100 " >
+					<img src="@Url.Content(item.image)" class="card-img-top" alt="Product Image" style="width: 100%; height: 70%">
+					<div class="card-body">
+						<h5 >@Resource.ProductName:<span class="name">@item.ProductName</span></h5>
+						<p ><strong>@Resource.Quantity</strong>:<span class="qunitity">@item.Quantity</span></p>
+						<p ><strong>@Resource.Price</strong>$<span class="price" > @item.Price</span></p>
+						<p hidden class="item_id">@item.id</p>
+						<a href="@Url.Action("delete", "Product", new { id = item.id })" class="btn btn-danger btn-sm" onclick="return del()">@Resource.delete</a>
+						<a href="@Url.Action("edit", "Product", new { id = item.id })" class="btn btn-primary btn-sm">@Resource.edit</a>
+						<button class="btn btn-success  btn-sm" >@Resource.addcard</button>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+<script>
+
+
+	    let Alldata=[]
+			//confirm delete
+			function del()
+			{
+				return confirm("هل متاكد انك تريد حذف المنتج");
+			}
+
+
+	        // to reach data product in click this button
+			$('.btn-success').on('click', function () {
+				var card = $(this).closest('.card ')
+
+				var productName = card.find('.name').text();
+				var price = parseInt(card.find('.price').text());
+				var quantity = parseInt(card.find('.qunitity').text());
+				var imageSrc = card.find('img').attr('src');
+				
+				var itemId = parseInt(card.find('.item_id').text());
+				let table = {
+					id: itemId,
+					imag:imageSrc,
+					price: price,
+					productName: productName,
+					quantity: quantity,
+				};
+				if (Alldata.some(d =>
+					d.id == table.id)) {
+
+					Swal.fire({
+						icon: "warning",
+						title: "The item is already in your cart",
+						titleColor: "yellow",
+						background: "#f0ad4e",
+						showConfirmButton: false,
+						timer: 1500,
+					});
+				}
+				else {
+					Alldata.push(table);
+					console.log("رقم المعرف:", Alldata);
+					localStorage.setItem("addcort", JSON.stringify(Alldata))
+					Swal.fire({
+						icon: "success",
+						title: "The product has been added successfully",
+						background: "rgb(146, 218, 104)",
+						showConfirmButton: false,
+						timer: 1500,
+						titleColor: "#ffffff",
+						iconColor: "#5cb85c",
+					});
+
+				}
+
+
+
+			})
+	//sava data in localstorage
+
+
+</script>

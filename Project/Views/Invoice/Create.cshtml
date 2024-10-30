@@ -1,0 +1,274 @@
+﻿@using Project.Resources
+@model Project.ViewModel.Create_Invoice
+@{
+	ViewBag.Title = "Create";
+	Layout = "~/Views/Shared/_LayoutBasic.cshtml";
+}
+<div class="container mt-5">
+	<h1 class="text-center">@Resource.Invoice</h1>
+	<div class="row">
+		<div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+			@Html.Label(@Resource.Customer)
+			@Html.DropDownListFor(p => p.CustomerId, ViewData["CustomerId"] as SelectList, new { @class = "form-control" })
+			@Html.ValidationMessageFor(p => p.CustomerId, "", new { @class = "text-danger" })
+		</div>
+
+		<div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+			@Html.Label(@Resource.date)
+			<input class="form-control" type="datetime-local" disabled id="datetime" />
+		</div>
+
+		<div class="table-responsive">
+			<table class="table table-hover table-responsive" id="myTable">
+				<thead>
+					<tr>
+						<th scope="col">@Resource.ProductName</th>
+						<th scope="col">@Resource.Quantity</th>
+						<th scope="col">@Resource.Price</th>
+						<th scope="col">@Resource.Number</th>
+						<th scope="col">@Resource.discount</th>
+						<th scope="col">@Resource.total</th>
+						<th scope="col"></th>
+					</tr>
+				</thead>
+				<tbody id="data">
+				</tbody>
+			</table>
+		</div>
+
+		<div class="col-12 mb-4">
+			@Html.Label(@Resource.total_discound)
+			<br />
+			@Html.EditorFor(p => p.Discount, new { @class = "form-control" })
+		</div>
+
+		<div class="col-12 mb-4">
+			@Html.Label(@Resource.total_money)
+			<input class="form-control" type="number" disabled id="total_money" />
+		</div>
+
+		<div class="col-12 mb-4">
+			<button class="btn btn-primary w-100" onclick="create_invoce()" style="font-size: 1.25rem;">@Resource.add</button>
+		</div>
+	</div>
+</div>
+
+
+@section vaild{
+
+	@Scripts.Render("~/script")
+
+
+}
+@section js{
+	<script>
+			$(document).ready(function () {
+
+
+
+
+				//cal date invoice
+				const now = new Date();
+				const formattedDate = now.toISOString().slice(0, 16);
+				document.getElementById("datetime").value = formattedDate;
+				//display data product
+			var products = JSON.parse(localStorage.getItem("addcort")) || [];
+			var row = document.getElementById('data');
+			products.forEach(pr => {
+				let value = `<tr class="table-secondary">
+						 <td>${pr.productName}</td>
+
+						  <td class="quantity_db" data-id="${pr.id}">${pr.quantity}</td>
+						   <td class="price_item" data-id="${pr.id}" >${pr.price}</td>
+						  <td><input type="number" class="quantity form-control" data-id="${pr.id}"   /></td>
+
+						  <td><input type="number"  class="discound form-control"  data-id="${pr.id}" /></td>
+						  <td class="total_price" data-id="${pr.id}" ></td>
+						<td><button onclick="deleteItem(this)" data-id="${pr.id}" class="btn btn-danger">@Resource.delete</button></td>
+
+						</tr>`;
+				row.innerHTML += value;
+
+			})
+				//cal money for each product
+				var All_value_quantity = document.querySelectorAll('.quantity')
+				var All_value_discound = document.querySelectorAll('.discound')
+				//let quantities = [];
+				//let discounds = [];
+				All_value_quantity.forEach(quantity => {
+					quantity.addEventListener('input', function () {
+						let id = this.getAttribute('data-id');
+						let q_db = document.querySelector(`.quantity_db[data-id="${id}"]`).textContent
+						let value_int = this.value
+
+						setTimeout(() => {
+							if (value_int < 0 || value_int > q_db) {
+								alert("Enter correct data for quantity");
+								this.value = '';
+
+							}
+
+							updateTotalPrices();
+						}, 100);
+
+					})
+				})
+				All_value_discound.forEach(discound => {
+					discound.addEventListener('input', function () {
+						let id = this.getAttribute('data-id');
+						let p = parseFloat(document.querySelector(`.price_item[data-id="${id}"]`).textContent)
+						let value_int = this.value
+						console.log(value_int);
+
+						setTimeout(() => {
+							if (this.value &&(value_int < 0 || value_int > p) ){
+								alert("Enter correct data for discound ");
+								this.value = '';
+
+							}
+
+							updateTotalPrices();
+
+						}, 100);
+
+					})
+				})
+				function updateTotalPrices() {
+					All_value_quantity.forEach(q => {
+						let id = q.getAttribute('data-id');
+						console.log(id);
+						let d = document.querySelector(`.discound[data-id="${id}"]`).value || 0
+						console.log(d);
+						let price = document.querySelector(`.price_item[data-id="${id}"]`).textContent
+						console.log(price);
+						console.log(q.value);
+						if (q.value === "" || isNaN(q.value) || q.value <= 0) {
+							document.querySelector(`.total_price[data-id="${id}"]`).textContent = 0
+							total_money();
+
+						}
+
+						else {
+							let total = (q.value * price) - d;
+							console.log(total)
+							document.querySelector(`.total_price[data-id="${id}"]`).textContent = total
+							total_money();
+						}
+
+
+					})
+				}
+
+
+
+
+
+
+			})
+			//delete row
+			function deleteItem(r)
+			{
+				var isdelete = confirm("are you not want buy it?")
+				if (isdelete) {
+					var items = JSON.parse(localStorage.getItem('addcort'));
+					let itemId = r.getAttribute('data-id');
+					console.log(itemId)
+					let index = items.findIndex(item => item.id == itemId);
+					if (index > -1) {
+						items.splice(index, 1);
+					}
+
+
+					console.log(items)
+					localStorage.setItem('addcort', JSON.stringify(items));
+					var i = r.parentNode.parentNode.rowIndex;
+					document.getElementById("myTable").deleteRow(i);
+
+				}
+
+			}
+			let value_Discount = 0
+			//total_money();
+			//cal total_mony
+
+			document.getElementById('Discount').addEventListener('input', function () {
+				value_Discount = parseFloat(this.value);
+				let total = parseFloat(document.getElementById('total_money').value);
+				setTimeout(() => {
+
+					if (this.value && (this.value < 0 || this.value > total)) {
+						alert("Enter correct data for total discound ");
+						this.value = '';
+						return;
+					}
+					total_money();
+
+				}, 100)
+
+			})
+
+			function total_money() {
+				var total_price_product = document.querySelectorAll('.total_price')
+				let total = 0;
+				total_price_product.forEach(p => {
+					total += parseFloat(p.textContent) || 0;
+				})
+
+
+				if (value_Discount > 0) {
+					document.getElementById('total_money').value = total - value_Discount;
+				} else {
+					document.getElementById('total_money').value = total;
+				}
+			}
+
+			//list of product in db
+			var invoiceItem = [];
+			function create_invoce() {
+				var Alldata = document.querySelectorAll('.table-secondary')
+				Alldata.forEach(p => {
+					let ProductId = p.querySelector('.quantity_db').getAttribute('data-id');
+					let Quantity = p.querySelector('.quantity').value;
+					let Discount = p.querySelector('.discound').value;
+					let TotalPrice = p.querySelector('.total_price').textContent;
+					let UnitPrice = p.querySelector('.price_item').textContent;
+
+					let data_product = {
+						ProductId: parseInt(ProductId),
+						Quantity: parseInt(Quantity)||0,
+						Discount: parseFloat(Discount)||0,
+						TotalPrice: parseFloat(TotalPrice)||0,
+						UnitPrice: parseFloat(UnitPrice)
+					}
+					invoiceItem.push(data_product);
+					console.log(invoiceItem)
+
+
+				})
+				let invoice = {
+					InvoiceDate: document.getElementById("datetime").value,
+					TotalAmount: parseFloat(document.getElementById('total_money').value) || 0,
+					CustomerId: parseInt(document.getElementById("CustomerId").value),
+					Discount: parseFloat(document.getElementById('Discount').value) || 0,
+					Items: invoiceItem
+				};
+				console.log(invoice)
+				localStorage.removeItem('addcort')
+				$.ajax({
+					url: "/Invoice/Create",
+					type: "Post",
+					data: { invoice: invoice },
+					success: function (response) {
+						if (response.success) {
+							window.location.href = response.redirectUrl;
+						}
+					},
+					error: function (errormessage) {
+						alert(errormessage.responseText);
+						console.log(errormessage.responseText)
+					}
+
+				})
+			}
+	</script>
+}

@@ -1,0 +1,108 @@
+﻿@using Project.Resources
+<!DOCTYPE html>
+<html lang="@System.Threading.Thread.CurrentThread.CurrentCulture.Name" dir="@(System.Threading.Thread.CurrentThread.CurrentCulture.Name == "ar" ? "rtl" : "ltr")">
+
+<head>
+	<meta name="viewport" content="width=device-width" />
+	<title>@ViewBag.Title</title>
+
+	<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+	<link href="~/Content/Style.css" rel="stylesheet" />
+	
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+
+	<nav class="navbar navbar-expand-lg navbar-light bg-light">
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav me-auto flex-column flex-lg-row d1">
+				<li class="nav-item dropdown order-sm-4 order-lg-1 ">
+					<a class="nav-link dropdown-toggle  " href="#" id="navbarDropdownCustomer" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+						@Resource.Customer
+					</a>
+					<ul class="dropdown-menu" aria-labelledby="navbarDropdownCustomer">
+						<li><a class="dropdown-item text-center" href="@Url.Action("Create", "Customer")">@Resource.AddCustomer</a></li>
+						<li><a class="dropdown-item text-center" href="@Url.Action("Index", "Customer")">@Resource.ShowCustomer</a></li>
+					</ul>
+				</li>
+
+				<li class="nav-item dropdown order-sm-3 order-lg-2">
+					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownProduct" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+						@Resource.Product
+					</a>
+					<ul class="dropdown-menu" aria-labelledby="navbarDropdownProduct">
+						<li><a class="dropdown-item text-center" href="@Url.Action("AddProduct", "Product")">@Resource.AddProduct</a></li>
+						<li><a class="dropdown-item text-center" href="@Url.Action("Index", "Product")">@Resource.ShowProduct</a></li>
+					</ul>
+				</li>
+
+				<li class="nav-item dropdown order-sm-2 order-lg-3">
+					<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownCategory" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+						@Resource.Category
+					</a>
+					<ul class="dropdown-menu" aria-labelledby="navbarDropdownCategory">
+						<li><a class="dropdown-item text-center" href="@Url.Action("Create", "Category")">@Resource.AddCatogry</a></li>
+						<li><a class="dropdown-item text-center" href="@Url.Action("Index", "Category")">@Resource.listCatogry</a></li>
+					</ul>
+				</li>
+
+				<li class="nav-item dropdown order-sm-1 order-lg-4">
+					<a class="nav-link dropdown-toggle rtl_ar" href="#" id="navbarDropdownInvoice" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+						@Resource.Invoice
+					</a>
+					<ul class="dropdown-menu" aria-labelledby="navbarDropdownInvoice">
+						<li><a class="dropdown-item text-center" href="@Url.Action("Create", "Invoice")">@Resource.add</a></li>
+						<li><a class="dropdown-item text-center" href="@Url.Action("Index", "Invoice")">@Resource.listInvoice</a></li>
+					</ul>
+				</li>
+			</ul>
+
+			<ul class="navbar-nav flex-column flex-lg-row">
+				@if (Request.Cookies["sessionid"] != null && !string.IsNullOrEmpty(Request.Cookies["sessionid"].Value))
+				{
+					<li class="nav-item order-sm-2 order-lg-1" style="margin-top:2%">
+						<span class="nav-link">@Request.Cookies["name"].Value</span>
+					</li>
+					<li class="nav-item order-sm-2 order-lg-1">
+						<a class="nav-link" href="@Url.Action("Logout", "Account")">@Resource.logout</a>
+					</li>
+				}
+				else
+				{
+					<li class="nav-item order-sm-2 order-lg-1">
+						<a class="nav-link" href="@Url.Action("Login", "Account")">@Resource.Login</a>
+					</li>
+					<li class="nav-item order-sm-1 order-lg-2">
+						<a class="nav-link" href="@Url.Action("Register", "Account")">@Resource.Register</a>
+					</li>
+				}
+
+				<li class="nav-item">
+					<form id="form" action="@Url.Action("Change", "Home")" method="post">
+						<select name="lang" class="form-control" onchange="this.form.submit()">
+							<option value=" ">@Resource.Language</option>
+							<option value="en">English</option>
+							<option value="ar">العربية</option>
+						</select>
+					</form>
+				</li>
+			</ul>
+		</div>
+	</nav>
+
+
+	<div class="mb-5">
+		@RenderBody()
+	</div>
+	@RenderSection("footor", required: false)
+	@RenderSection("vaild", required: false)
+	<script src="~/Scripts/bootstrap.bundle.min.js"></script>
+	<script src="~/Scripts/document.js"></script>
+	@RenderSection("js", required: false)
+</body>
+</html>

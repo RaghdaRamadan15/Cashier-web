@@ -1,0 +1,53 @@
+﻿@model List<Project.Models.Customer>
+@using Project.Resources
+
+@{
+	ViewBag.Title = "Index";
+	Layout = "~/Views/Shared/_LayoutBasic.cshtml";
+}
+<div class="container mt-5">
+	<div class="table-responsive">
+		<table class="table table-hover table-striped">
+			<thead class="thead-dark">
+				<tr>
+					<th scope="col">@Resource.name</th>
+					<th scope="col">@Resource.PhoneNumber</th>
+					<th scope="col">@Resource.email</th>
+					<th scope="col">@Resource.Address</th>
+					<th scope="col"></th>
+					<th scope="col"></th>
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (var item in Model)
+				{
+					<tr class="table-active">
+						<td>@item.CustomerName</td>
+						<td>@item.PhoneNumber</td>
+						<td>@item.Email</td>
+						<td>@item.Address</td>
+						<td>
+							<a href="/Customer/edit/@item.id" class="btn btn-primary btn-sm">
+								@Resource.edit
+							</a>
+						</td>
+						<td>
+							<a href="/Customer/delete/@item.id" class="btn btn-danger btn-sm" onclick="return del()">
+								@Resource.delete
+							</a>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+</div>
+
+@**@
+@section js{
+	<script>
+		function del() {
+			return confirm("هل متاكد انك تريد حذف العميل");
+		}
+	</script>
+}
