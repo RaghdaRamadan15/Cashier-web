@@ -7,21 +7,33 @@
 <div class="container mt-5">
 	<h1 class="text-center">@Resource.Invoice</h1>
 	<div class="row">
-		<div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+		<div class="col-lg-3 col-md-6 col-sm-12 mb-4">
 			@Html.Label(@Resource.Customer)
 			@Html.DropDownListFor(p => p.CustomerId, ViewData["CustomerId"] as SelectList, new { @class = "form-control" })
 			@Html.ValidationMessageFor(p => p.CustomerId, "", new { @class = "text-danger" })
 		</div>
 
-		<div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+		<div class="col-lg-3 col-md-6 col-sm-12 mb-4">
 			@Html.Label(@Resource.date)
 			<input class="form-control" type="datetime-local" disabled id="datetime" />
 		</div>
+		<div class="col-lg-3 col-md-6 col-sm-12 mb-4">
 
+			@Html.Label(Resource.Category)
+			@Html.DropDownList(Resource.Category, ViewData["CategoryId"] as SelectList, new { @class = "form-control", @id = "selectcatogray" })
+		</div>
+		<div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+
+			@Html.Label(Resource.Product)
+			<select id="selectproduct" class="form-control">
+				
+			</select>
+		</div>
 		<div class="table-responsive">
 			<table class="table table-hover table-responsive" id="myTable">
 				<thead>
 					<tr>
+						<th scope="col">@Resource.image</th>
 						<th scope="col">@Resource.ProductName</th>
 						<th scope="col">@Resource.Quantity</th>
 						<th scope="col">@Resource.Price</th>
@@ -48,7 +60,7 @@
 		</div>
 
 		<div class="col-12 mb-4">
-			<button class="btn btn-primary w-100" onclick="create_invoce()" style="font-size: 1.25rem;">@Resource.add</button>
+			<button class="btn btn-primary w-100" onclick="create_invoice()" style="font-size: 1.25rem;">@Resource.add</button>
 		</div>
 	</div>
 </div>
@@ -61,214 +73,270 @@
 
 }
 @section js{
+
 	<script>
-			$(document).ready(function () {
+	$(document).ready(function () {
+		var All_value_quantity = document.querySelectorAll('.quantity');
+		var All_value_discound = document.querySelectorAll('.discound');
+
+		//get all product for category
+		function loadProducts(categoryId)
+		{
+
+			$.ajax({
+				url: "/Product/getproductss",
+				type: "GET",
+				data: { id: categoryId },
+				success: function (data) {
+					console.log(data);
+					createoptions(data);
+				},
+				error: function (errormessage) {
+					alert(errormessage.responseText);
+				}
+			});
+		}
+		var defaultCategoryId = $('#selectcatogray').val();
+		loadProducts(defaultCategoryId);
 
 
+		$('#selectcatogray').change(function () {
+			var id = $(this).val();
+			loadProducts(id);
+		});
 
+		//add option in selectproduct
+		function createoptions(data) {
+			let selectElements = document.getElementById('selectproduct');
+			selectElements.innerHTML = '';
+			selectElements.innerHTML +='<option></option>'
+			data.forEach(p => {
+				let option = document.createElement('option');
+				option.value = p.Id;
+				option.textContent = p.Name;
+				selectElements.appendChild(option);
+			});
+		}
 
-				//cal date invoice
-				const now = new Date();
-				const formattedDate = now.toISOString().slice(0, 16);
-				document.getElementById("datetime").value = formattedDate;
-				//display data product
-			var products = JSON.parse(localStorage.getItem("addcort")) || [];
+		/********************************************************************* */
+
+		//add item in invoice
+		$('#selectproduct').change(function () {
+			var id = $(this).val();
+
+			$.ajax({
+				url: "/Product/getproduct",
+				type: "GET",
+				data: { id: id },
+				success: function (pr) {
+					console.log(pr);
+					additem(pr);
+				},
+				error: function (errormessage) {
+					alert(errormessage.responseText);
+				}
+			});
+		});
+
+		function additem(pr) {
 			var row = document.getElementById('data');
-			products.forEach(pr => {
-				let value = `<tr class="table-secondary">
-						 <td>${pr.productName}</td>
+			
+			
+				var newRow = document.createElement('tr');
+				newRow.classList.add('table-secondary');
 
-						  <td class="quantity_db" data-id="${pr.id}">${pr.quantity}</td>
-						   <td class="price_item" data-id="${pr.id}" >${pr.price}</td>
-						  <td><input type="number" class="quantity form-control" data-id="${pr.id}"   /></td>
 
-						  <td><input type="number"  class="discound form-control"  data-id="${pr.id}" /></td>
-						  <td class="total_price" data-id="${pr.id}" ></td>
-						<td><button onclick="deleteItem(this)" data-id="${pr.id}" class="btn btn-danger">@Resource.delete</button></td>
+				newRow.innerHTML = `
+            <td><img class="product_image" src="${pr.image}" width="15%"></td>
+            <td>${pr.ProductName}</td>
+            <td class="quantity_db" data-id="${pr.id}">${pr.Quantity}</td>
+            <td class="price_item" data-id="${pr.id}">${pr.Price}</td>
+            <td><input type="number" class="quantity form-control" data-id="${pr.id}" /></td>
+            <td><input type="number" class="discound form-control" data-id="${pr.id}" /></td>
+            <td class="total_price" data-id="${pr.id}"></td>
+            <td><button id="deletitem" data-id="${pr.id}" class="btn btn-danger">@Resource.delete</button></td>
+        `;
 
-						</tr>`;
-				row.innerHTML += value;
 
-			})
-				//cal money for each product
-				var All_value_quantity = document.querySelectorAll('.quantity')
-				var All_value_discound = document.querySelectorAll('.discound')
-				//let quantities = [];
-				//let discounds = [];
-				All_value_quantity.forEach(quantity => {
-					quantity.addEventListener('input', function () {
-						let id = this.getAttribute('data-id');
-						let q_db = document.querySelector(`.quantity_db[data-id="${id}"]`).textContent
-						let value_int = this.value
+				row.appendChild(newRow);
 
-						setTimeout(() => {
-							if (value_int < 0 || value_int > q_db) {
-								alert("Enter correct data for quantity");
-								this.value = '';
+				All_value_quantity = document.querySelectorAll('.quantity');
+				All_value_discound = document.querySelectorAll('.discound');
+				updateinput();
+				updateTotalPrices();
 
-							}
+			
+		}
 
-							updateTotalPrices();
-						}, 100);
 
-					})
-				})
-				All_value_discound.forEach(discound => {
-					discound.addEventListener('input', function () {
-						let id = this.getAttribute('data-id');
-						let p = parseFloat(document.querySelector(`.price_item[data-id="${id}"]`).textContent)
-						let value_int = this.value
-						console.log(value_int);
+		/********************************************************************* */
+		// Calculate date invoice
+		const now = new Date();
+		const formattedDate = now.toISOString().slice(0, 16);
+		document.getElementById("datetime").value = formattedDate;
 
-						setTimeout(() => {
-							if (this.value &&(value_int < 0 || value_int > p) ){
-								alert("Enter correct data for discound ");
-								this.value = '';
+		// Calculate money for each product
+		function updateinput() {
 
-							}
 
-							updateTotalPrices();
+			All_value_quantity.forEach(quantity => {
+				quantity.addEventListener('input', function () {
+					let id = this.getAttribute('data-id');
+					let q_db = document.querySelector(`.quantity_db[data-id="${id}"]`).textContent;
+					let value_int = this.value;
 
-						}, 100);
-
-					})
-				})
-				function updateTotalPrices() {
-					All_value_quantity.forEach(q => {
-						let id = q.getAttribute('data-id');
-						console.log(id);
-						let d = document.querySelector(`.discound[data-id="${id}"]`).value || 0
-						console.log(d);
-						let price = document.querySelector(`.price_item[data-id="${id}"]`).textContent
-						console.log(price);
-						console.log(q.value);
-						if (q.value === "" || isNaN(q.value) || q.value <= 0) {
-							document.querySelector(`.total_price[data-id="${id}"]`).textContent = 0
-							total_money();
-
+					setTimeout(() => {
+						if (value_int < 0 || value_int > q_db) {
+							alert("Enter correct data for quantity");
+							this.value = '';
 						}
+						updateTotalPrices();
+					}, 100);
+				});
+			});
 
-						else {
-							let total = (q.value * price) - d;
-							console.log(total)
-							document.querySelector(`.total_price[data-id="${id}"]`).textContent = total
-							total_money();
+			All_value_discound.forEach(discound => {
+				discound.addEventListener('input', function () {
+					let id = this.getAttribute('data-id');
+					let p = parseFloat(document.querySelector(`.price_item[data-id="${id}"]`).textContent);
+					let value_int = this.value;
+					console.log(value_int);
+
+					setTimeout(() => {
+						if (this.value && (value_int < 0 || value_int > p)) {
+							alert("Enter correct data for discount");
+							this.value = '';
 						}
+						updateTotalPrices();
+					}, 100);
+				});
+			});
+		}
 
+		function updateTotalPrices() {
+			All_value_quantity.forEach(q => {
+				let id = q.getAttribute('data-id');
+				let d = document.querySelector(`.discound[data-id="${id}"]`).value || 0;
+				let price = document.querySelector(`.price_item[data-id="${id}"]`).textContent;
+				let quantity = q.value;
 
-					})
-				}
-
-
-
-
-
-
-			})
-			//delete row
-			function deleteItem(r)
-			{
-				var isdelete = confirm("are you not want buy it?")
-				if (isdelete) {
-					var items = JSON.parse(localStorage.getItem('addcort'));
-					let itemId = r.getAttribute('data-id');
-					console.log(itemId)
-					let index = items.findIndex(item => item.id == itemId);
-					if (index > -1) {
-						items.splice(index, 1);
-					}
-
-
-					console.log(items)
-					localStorage.setItem('addcort', JSON.stringify(items));
-					var i = r.parentNode.parentNode.rowIndex;
-					document.getElementById("myTable").deleteRow(i);
-
-				}
-
-			}
-			let value_Discount = 0
-			//total_money();
-			//cal total_mony
-
-			document.getElementById('Discount').addEventListener('input', function () {
-				value_Discount = parseFloat(this.value);
-				let total = parseFloat(document.getElementById('total_money').value);
-				setTimeout(() => {
-
-					if (this.value && (this.value < 0 || this.value > total)) {
-						alert("Enter correct data for total discound ");
-						this.value = '';
-						return;
-					}
+				if (quantity === "" || isNaN(quantity) || quantity <= 0) {
+					document.querySelector(`.total_price[data-id="${id}"]`).textContent = 0;
 					total_money();
-
-				}, 100)
-
-			})
-
-			function total_money() {
-				var total_price_product = document.querySelectorAll('.total_price')
-				let total = 0;
-				total_price_product.forEach(p => {
-					total += parseFloat(p.textContent) || 0;
-				})
-
-
-				if (value_Discount > 0) {
-					document.getElementById('total_money').value = total - value_Discount;
 				} else {
-					document.getElementById('total_money').value = total;
+					let total = (quantity * price) - d;
+					document.querySelector(`.total_price[data-id="${id}"]`).textContent = total;
+					total_money();
 				}
+			});
+		}
+
+
+
+		let value_Discount = 0;
+
+		// Calculate total money
+		document.getElementById('Discount').addEventListener('input', function () {
+			value_Discount = parseFloat(this.value);
+			let total = parseFloat(document.getElementById('total_money').value);
+			setTimeout(() => {
+				if (this.value && (this.value < 0 || this.value > total)) {
+					alert("Enter correct data for total discount");
+					this.value = '';
+					return;
+				}
+				total_money();
+			}, 100);
+		});
+
+		function total_money() {
+			var total_price_product = document.querySelectorAll('.total_price');
+			let total = 0;
+			total_price_product.forEach(p => {
+				total += parseFloat(p.textContent) || 0;
+			});
+
+			if (value_Discount > 0) {
+				document.getElementById('total_money').value = total - value_Discount;
+			} else {
+				document.getElementById('total_money').value = total;
 			}
-
-			//list of product in db
-			var invoiceItem = [];
-			function create_invoce() {
-				var Alldata = document.querySelectorAll('.table-secondary')
-				Alldata.forEach(p => {
-					let ProductId = p.querySelector('.quantity_db').getAttribute('data-id');
-					let Quantity = p.querySelector('.quantity').value;
-					let Discount = p.querySelector('.discound').value;
-					let TotalPrice = p.querySelector('.total_price').textContent;
-					let UnitPrice = p.querySelector('.price_item').textContent;
-
-					let data_product = {
-						ProductId: parseInt(ProductId),
-						Quantity: parseInt(Quantity)||0,
-						Discount: parseFloat(Discount)||0,
-						TotalPrice: parseFloat(TotalPrice)||0,
-						UnitPrice: parseFloat(UnitPrice)
-					}
-					invoiceItem.push(data_product);
-					console.log(invoiceItem)
+		}
+		// Delete row
+		$(document).on('click', '#deletitem', function () {
 
 
-				})
-				let invoice = {
-					InvoiceDate: document.getElementById("datetime").value,
-					TotalAmount: parseFloat(document.getElementById('total_money').value) || 0,
-					CustomerId: parseInt(document.getElementById("CustomerId").value),
-					Discount: parseFloat(document.getElementById('Discount').value) || 0,
-					Items: invoiceItem
+			var isdelete = confirm("Are you sure you don't want to buy it?");
+			if (isdelete) {
+				var row = $(this).closest('tr');
+				var rowIndex = row[0].rowIndex;
+
+				document.getElementById("myTable").deleteRow(rowIndex);
+			}
+			All_value_quantity = document.querySelectorAll('.quantity');
+			All_value_discound = document.querySelectorAll('.discound');
+			updateinput();
+
+			updateTotalPrices();
+			total_money();
+		});
+
+
+
+
+	});
+		var invoiceItem = [];
+		function create_invoice() {
+
+			var Alldata = document.querySelectorAll('.table-secondary');
+			Alldata.forEach(p => {
+				let ProductId = p.querySelector('.quantity_db').getAttribute('data-id');
+				let Quantity = p.querySelector('.quantity').value;
+				let Discount = p.querySelector('.discound').value;
+				let TotalPrice = p.querySelector('.total_price').textContent;
+				let UnitPrice = p.querySelector('.price_item').textContent;
+
+				let data_product = {
+					ProductId: parseInt(ProductId),
+					Quantity: parseInt(Quantity) || 0,
+					Discount: parseFloat(Discount) || 0,
+					TotalPrice: parseFloat(TotalPrice) || 0,
+					UnitPrice: parseFloat(UnitPrice)
 				};
-				console.log(invoice)
-				localStorage.removeItem('addcort')
-				$.ajax({
-					url: "/Invoice/Create",
-					type: "Post",
-					data: { invoice: invoice },
-					success: function (response) {
-						if (response.success) {
-							window.location.href = response.redirectUrl;
-						}
-					},
-					error: function (errormessage) {
-						alert(errormessage.responseText);
-						console.log(errormessage.responseText)
-					}
+				invoiceItem.push(data_product);
+			});
+			let invoice = {
+				InvoiceDate: document.getElementById("datetime").value,
+				TotalAmount: parseFloat(document.getElementById('total_money').value) || 0,
+				CustomerId: parseInt(document.getElementById("CustomerId").value),
+				Discount: parseFloat(document.getElementById('Discount').value) || 0,
+				Items: invoiceItem
+			};
 
-				})
-			}
+			$.ajax({
+				url: "/Invoice/Create",
+				type: "POST",
+				data: { invoice: invoice },
+				success: function (response) {
+					console.log(response)
+					if (response.success) {
+
+						window.location.href = response.redirectUrl;
+					}
+				},
+				//error: function (errormessage) {
+				//	console.log(errormessage);
+				//	alert(errormessage.responseText);
+				//}
+				error: function (xhr, status, error) {
+					console.log("Error: " + error);
+					console.log("Response: " + xhr.responseText);
+				}
+			});
+		}
+
 	</script>
+
+
+
 }

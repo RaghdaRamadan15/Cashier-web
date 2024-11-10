@@ -28,6 +28,7 @@ namespace Project.Controllers
         public ActionResult Create()
         {
             ViewData["CustomerId"] = new SelectList(context.Customers.ToList(), "id", "CustomerName");
+             ViewData["CategoryId"] = new SelectList(context.Categories.ToList(), "id", "Name");
             return View();
         }
 
@@ -76,6 +77,7 @@ namespace Project.Controllers
 
             }
             ViewData["CustomerId"] = new SelectList(context.Customers.ToList(), "id", "CustomerName");
+             ViewData["CategoryId"] = new SelectList(context.Categories.ToList(), "id", "Name");
             return View();
 
         }

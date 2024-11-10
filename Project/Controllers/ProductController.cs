@@ -35,7 +35,25 @@ namespace Project.Controllers
             var products = context.Products.Where(p => p.CategoryId == id).ToList();
             return PartialView("_getproduct", products);
         }
+        //return products by select frist catogrey id in dropdown
 
+        [HttpGet]
+        public ActionResult getproductss(int id)
+        {
+
+            var products = context.Products.Where(p => p.CategoryId == id).Select(p=>new {Id=p.id,Name=p.ProductName}).ToList();
+
+            return Json(products, JsonRequestBehavior.AllowGet);
+        }
+        //return product for add in invoice
+
+            [HttpGet]
+            public ActionResult getproduct(int id)
+            {
+
+                var product = context.Products.Where(p => p.id == id).FirstOrDefault();
+                return Json(product, JsonRequestBehavior.AllowGet);
+            }
         #endregion
 
 

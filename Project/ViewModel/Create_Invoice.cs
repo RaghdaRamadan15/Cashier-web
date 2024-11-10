@@ -11,6 +11,7 @@ namespace Project.ViewModel
     {
         
         public DateTime InvoiceDate { get; set; }
+       
         public float TotalAmount { get; set; }
 
         [Required]

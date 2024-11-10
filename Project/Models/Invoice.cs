@@ -15,10 +15,10 @@ namespace Project.Models
         public float TotalAmount { get; set; }
         
         public float Discount { get; set; } = 0;
-        [Required]
+       
         public int CustomerId { get; set; } 
         public Customer Customer { get; set; }
-        [Required]
+        
         public List<InvoiceItem> InvoiceItems { get; set; }
     }
 }
